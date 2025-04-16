@@ -35,10 +35,28 @@
 </head>
 <body>
   <h1>🚨 Warehouse Alerts</h1>
+  <button id="startBtn" onclick="startAlerts()" style="margin:1rem;padding:1rem;font-size:1rem;">Start Alerts</button>
   <div id="alerts">Loading alerts...</div>
 
   <script>
    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpPcQGHzO-c5hkqWFVh5lKE4J7Z64iAUdTKnOM9g8BEfrvZVAGQGw8KB6e_H36y1T4K5CmUDhZ_XvN/pub?output=csv";
+    let alertsEnabled = false;
+
+function startAlerts() {
+  alertsEnabled = true;
+  document.getElementById("startBtn").style.display = "none";
+  fetchData(); // kick off first fetch
+}
+
+// Modify playAlertSound like this:
+function playAlertSound() {
+  if (!alertsEnabled) return;
+  const audio = new Audio("alarm_clock.ogg");
+  audio.play().catch(err => {
+    console.warn("Audio play failed:", err);
+  });
+}
+
     let previousAlertIds = new Set();
 
     async function fetchData() {
