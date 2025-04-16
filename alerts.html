@@ -29,8 +29,8 @@
       width: 200px; /* Set the width of each alert box */
       box-sizing: border-box;
       text-align: left;
+      word-wrap: break-word;
     }
-
   </style>
 </head>
 <body>
@@ -69,4 +69,5 @@
         const whNotifiedIndex = headers.findIndex(h => h.trim().toLowerCase() === "wh notified");
 
         const alertRows = data.filter(row => {
-          const value = row[whNotifiedIndex]?.trim().
+          const value = row[whNotifiedIndex]?.trim().toLowerCase();
+          return !value || value === "no" ||
