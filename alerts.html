@@ -40,6 +40,7 @@
     function startAlerts() {
       alertsEnabled = true;
       document.getElementById("startBtn").style.display = "none";
+      console.log("Alerts started!");  // Debugging log
       fetchData();
     }
 
@@ -49,6 +50,11 @@
       audio.play().catch(err => {
         console.warn("Audio play failed:", err);
       });
+    }
+
+    // Function to sanitize alert ID to be a valid CSS selector
+    function sanitizeId(id) {
+      return id.replace(/[^\w-]/g, "_"); // Replace any non-word character with underscore
     }
 
     async function fetchData() {
@@ -88,7 +94,7 @@
 
         // Remove previously displayed alerts that are now checked
         alertRows.forEach(row => {
-          const alertId = row.join("|"); // Unique ID based on row
+          const alertId = sanitizeId(row.join("|")); // Sanitize the alert ID
           if (!previousAlertIds.has(alertId)) {
             previousAlertIds.add(alertId);
             displayedAlerts.push(alertId); // Add new alert ID to the displayed list
@@ -98,7 +104,7 @@
 
         // Remove alerts for rows where "WH Notified" is checked (TRUE)
         displayedAlerts.forEach(alertId => {
-          const alertIndex = alertRows.findIndex(row => row.join("|") === alertId);
+          const alertIndex = alertRows.findIndex(row => sanitizeId(row.join("|")) === alertId);
           if (alertIndex === -1) {
             // If the alert is no longer in the sheet (because it's checked), remove it
             const alertDiv = document.querySelector(`#${alertId}`);
@@ -111,11 +117,11 @@
 
         // Create alert boxes for newly found alerts
         alertRows.forEach(row => {
-          const alertId = row.join("|"); // Unique ID based on row
+          const alertId = sanitizeId(row.join("|")); // Sanitize the alert ID
           if (!previousAlertIds.has(alertId)) {
             const div = document.createElement("div");
             div.className = "alert";
-            div.id = alertId; // Add unique ID for each alert div
+            div.id = alertId; // Add sanitized unique ID for each alert div
 
             // Format the row data for display
             div.innerHTML = headers.map((h, i) => `<strong>${h}:</strong> ${row[i] || ""}`).join("<br>");
@@ -130,7 +136,10 @@
     }
 
     setInterval(() => {
-      if (alertsEnabled) fetchData();
+      if (alertsEnabled) {
+        console.log("Refreshing alerts...");  // Debugging log
+        fetchData();
+      }
     }, 3000); // Refresh every 15 seconds
   </script>
 </body>
