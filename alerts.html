@@ -51,11 +51,12 @@ function startAlerts() {
 // Modify playAlertSound like this:
 function playAlertSound() {
   if (!alertsEnabled) return;
-  const audio = new Audio("alarm_clock.ogg");
+  const audio = new Audio("https://notificationsounds.com/storage/sounds/file-sounds-1152-pristine.mp3");
   audio.play().catch(err => {
     console.warn("Audio play failed:", err);
   });
 }
+
 
     let previousAlertIds = new Set();
 
