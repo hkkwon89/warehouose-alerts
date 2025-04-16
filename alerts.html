@@ -35,11 +35,23 @@
 </head>
 <body>
   <h1>🚨 Warehouse Alerts</h1>
-  <div id="alerts">Loading alerts...</div>  <!-- Alerts container -->
+  <div id="alerts">Loading alerts...</div>
   <script>
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpPcQGHzO-c5hkqWFVh5lKE4J7Z64iAUdTKnOM9g8BEfrvZVAGQGw8KB6e_H36y1T4K5CmUDhZ_XvN/pub?output=csv";
 
     let previousAlertIds = new Set();
+
+    function isRecent(timestamp) {
+      const addedTime = new Date(timestamp);
+      const now = new Date();
+      const diff = (now - addedTime) / 1000;
+      return diff < 90;
+    }
+
+    function playAlertSound() {
+      const audio = new Audio("alarm_clock.ogg");
+      audio.play();
+    }
 
     async function fetchData() {
       try {
@@ -47,13 +59,8 @@
         const text = await res.text();
         const rows = text.trim().split("\n").map(r => r.split(","));
         const alertsDiv = document.getElementById("alerts");
-
-        // Log the element to ensure it's found
-        console.log("alertsDiv:", alertsDiv);
-
-        alertsDiv.innerHTML = "Loaded " + rows.length + " rows."; // Update the element to show how many rows were fetched
-
         const headers = rows[0].map(h => h.trim());
+
         const tsIndex = headers.indexOf("Timestamp");
         const orderIndex = headers.indexOf("Order #");
         const productIndex = headers.indexOf("Product");
@@ -67,8 +74,9 @@
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i].map(r => r.trim());
           const ts = row[tsIndex];
-          let status = row[statusIndex] ? row[statusIndex].toLowerCase() : ""; 
+          let status = row[statusIndex] ? row[statusIndex].toLowerCase() : ""; // Validate if status exists
 
+          // Skip this row if no status is provided
           if (!status) continue;
 
           if (status === "urgent" || isRecent(ts)) {
@@ -93,7 +101,7 @@
 
         if (newAlertDetected) {
           playAlertSound();
-          document.body.style.backgroundColor = "#660000";
+          document.body.style.backgroundColor = "#660000"; // Flash red background
           setTimeout(() => document.body.style.backgroundColor = "#111", 1000);
         }
 
@@ -105,19 +113,7 @@
     }
 
     fetchData();
-    setInterval(fetchData, 10000); // Refresh every 10 seconds
-
-    function isRecent(timestamp) {
-      const addedTime = new Date(timestamp);
-      const now = new Date();
-      const diff = (now - addedTime) / 1000;
-      return diff < 90;
-    }
-
-    function playAlertSound() {
-      const audio = new Audio("alarm_clock.ogg");
-      audio.play();
-    }
+    setInterval(fetchData, 5000); // Refresh every 30 seconds
   </script>
 </body>
 </html>
