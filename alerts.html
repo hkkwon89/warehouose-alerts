@@ -11,25 +11,18 @@
       text-align: center;
       padding: 2rem;
     }
-
     #alerts {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 1rem;
-      justify-content: center;
       margin-top: 2rem;
     }
-
     .alert {
       border: 2px solid red;
-      padding: 0.8rem;
+      padding: 1rem;
       background-color: #220000;
       border-radius: 10px;
-      font-size: 1rem;
-      width: 200px; /* Set the width of each alert box */
-      box-sizing: border-box;
-      text-align: left;
-      word-wrap: break-word;
+      font-size: 1.2rem;
     }
   </style>
 </head>
@@ -70,4 +63,41 @@
 
         const alertRows = data.filter(row => {
           const value = row[whNotifiedIndex]?.trim().toLowerCase();
-          return !value || value === "no" ||
+          return !value || value === "no" || value === "false";
+        });
+
+        const alertContainer = document.getElementById("alerts");
+        alertContainer.innerHTML = "";
+
+        if (alertRows.length === 0) {
+          alertContainer.innerHTML = "<p>No alerts right now ✅</p>";
+          return;
+        }
+
+        alertRows.forEach(row => {
+          const alertId = row.join("|"); // Unique ID based on row
+          if (!previousAlertIds.has(alertId)) {
+            previousAlertIds.add(alertId);
+            if (alertsEnabled) playAlertSound();
+          }
+
+          const div = document.createElement("div");
+          div.className = "alert";
+
+          // Format the row data for display
+          div.innerHTML = headers.map((h, i) => `<strong>${h}:</strong> ${row[i] || ""}`).join("<br>");
+          alertContainer.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error("Failed to fetch alerts:", err);
+        document.getElementById("alerts").innerHTML = "⚠️ Failed to load alerts.";
+      }
+    }
+
+    setInterval(() => {
+      if (alertsEnabled) fetchData();
+    }, 15000); // every 15 seconds
+  </script>
+</body>
+</html>
