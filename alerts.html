@@ -54,61 +54,65 @@
       audio.play();
     }
 
-    async function fetchData() {
-      try {
-        const res = await fetch(sheetUrl);
-        const text = await res.text();
-        const rows = text.trim().split("\n").map(r => r.split(","));
-        const alertsDiv = document.getElementById("alerts");
-        const headers = rows[0].map(h => h.trim());
+   async function fetchData() {
+  try {
+    const res = await fetch(sheetUrl);
+    const text = await res.text();
+    const rows = text.trim().split("\n").map(r => r.split(","));
+    const alertsDiv = document.getElementById("alerts");
+    const headers = rows[0].map(h => h.trim());
 
-        const tsIndex = headers.indexOf("Timestamp");
-        const orderIndex = headers.indexOf("Order #");
-        const productIndex = headers.indexOf("Product");
-        const qtyIndex = headers.indexOf("Quantity");
-        const statusIndex = headers.indexOf("Status");
+    const tsIndex = headers.indexOf("Timestamp");
+    const orderIndex = headers.indexOf("Order #");
+    const productIndex = headers.indexOf("Product");
+    const qtyIndex = headers.indexOf("Quantity");
+    const statusIndex = headers.indexOf("Status");
 
-        const newAlertIds = new Set();
-        let newAlertDetected = false;
-        alertsDiv.innerHTML = "";
+    const newAlertIds = new Set();
+    let newAlertDetected = false;
+    alertsDiv.innerHTML = "";
 
-        for (let i = 1; i < rows.length; i++) {
-          const row = rows[i].map(r => r.trim());
-          const ts = row[tsIndex];
-          const status = row[statusIndex].toLowerCase();
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i].map(r => r.trim());
+      const ts = row[tsIndex];
+      let status = row[statusIndex] ? row[statusIndex].toLowerCase() : ""; // Validate if status exists
 
-          if (status === "urgent" || isRecent(ts)) {
-            const order = row[orderIndex];
-            const product = row[productIndex];
-            const qty = row[qtyIndex];
-            const alertId = `${order}-${product}-${ts}`;
+      // Skip this row if no status is provided
+      if (!status) continue;
 
-            if (!previousAlertIds.has(alertId)) {
-              newAlertDetected = true;
-            }
+      if (status === "urgent" || isRecent(ts)) {
+        const order = row[orderIndex];
+        const product = row[productIndex];
+        const qty = row[qtyIndex];
+        const alertId = `${order}-${product}-${ts}`;
 
-            newAlertIds.add(alertId);
-
-            alertsDiv.innerHTML += `
-              <div class="alert">
-                🚨 Order #${order} - ${product} (${qty})
-                <span class="timestamp">${ts}</span>
-              </div>`;
-          }
+        if (!previousAlertIds.has(alertId)) {
+          newAlertDetected = true;
         }
 
-        if (newAlertDetected) {
-          playAlertSound();
-          document.body.style.backgroundColor = "#660000";
-          setTimeout(() => document.body.style.backgroundColor = "#111", 1000);
-        }
+        newAlertIds.add(alertId);
 
-        previousAlertIds = newAlertIds;
-      } catch (e) {
-        console.error("Failed to fetch alerts:", e);
-        document.getElementById("alerts").innerText = "Failed to load alerts.";
+        alertsDiv.innerHTML += `
+          <div class="alert">
+            🚨 Order #${order} - ${product} (${qty})
+            <span class="timestamp">${ts}</span>
+          </div>`;
       }
     }
+
+    if (newAlertDetected) {
+      playAlertSound();
+      document.body.style.backgroundColor = "#660000"; // Flash red background
+      setTimeout(() => document.body.style.backgroundColor = "#111", 1000);
+    }
+
+    previousAlertIds = newAlertIds;
+  } catch (e) {
+    console.error("Failed to fetch alerts:", e);
+    document.getElementById("alerts").innerText = "Failed to load alerts.";
+  }
+}
+
 
     fetchData();
     setInterval(fetchData, 30000);
